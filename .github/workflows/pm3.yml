@@ -4,7 +4,7 @@ on:
       tagname:
         description: 'tagname'
         required: true
-        default: '8.0.20'
+        default: '8.2'
       commithash:
         description: 'commit hash'
         required: true
@@ -14,7 +14,7 @@ on:
         required: true
         default: 'yes'
 
-name: Release Binaries pmmp 3
+name: Release Binaries pmmp 5
 
 jobs:
   build-php:
@@ -25,30 +25,15 @@ jobs:
       fail-fast: true
       matrix:
           include:
-            - option: "-P 4"
+            - option: "-P 5"
               name: ""
-              branch: "php/8.1"
-              upload-php-ini: "no"
-              musl-cross-make-repo: "DaisukeDaisuke/musl-cross-make"
-            - option: "-g -P 4"
-              name: "-gd"
-              branch: "php/8.1"
-              upload-php-ini: "no"
-              musl-cross-make-repo: "DaisukeDaisuke/musl-cross-make"
-            - option: "-g -P 4"
-              name: "-gd-no-modification"
-              branch: "php/8.1"
-              upload-php-ini: ""
-              musl-cross-make-repo: "ScerIO/musl-cross-make"
-            - option: "-g -P 5"
-              name: "-next-major-gd"
-              branch: "php/8.1"
-              upload-php-ini: "-next-major"
-              musl-cross-make-repo: "DaisukeDaisuke/musl-cross-make"
-            - option: "-g -P 5"
-              name: "-experimental-gd"
               branch: "php/8.2"
-              upload-php-ini: "-experimental-gd"
+              upload-php-ini: ""
+              musl-cross-make-repo: "DaisukeDaisuke/musl-cross-make"
+            - option: "-g -P 5"
+              name: "-gd"
+              branch: "php/8.2"
+              upload-php-ini: "no"
               musl-cross-make-repo: "DaisukeDaisuke/musl-cross-make"
             # Please note that if editing the matrix, the release workflow must also be edited.
     steps:
@@ -82,7 +67,7 @@ jobs:
           
       - name: making aarch64 php
         working-directory: php-build-scripts
-        run: ./compile.sh -t android-aarch64 -x -j2 ${{ matrix.option }}
+        run: ./compile.sh -t android-aarch64 -x -j4 ${{ matrix.option }}
         
       - name: copy php
         run: cp ./php-build-scripts/bin/php7/bin/php "php${{ matrix.name }}"
@@ -116,47 +101,20 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: php-gd
-
-      - name: Download a Build Artifact(php-gd-no-modification)
-        uses: actions/download-artifact@v2
-        with:
-          name: php-gd-no-modification
-
-      - name: Download a Build Artifact(php-next-major-gd)
-        uses: actions/download-artifact@v2
-        with:
-          name: php-next-major-gd
-
-      - name: Download a Build Artifact(php-experimental-gd)
-        uses: actions/download-artifact@v2
-        with:
-          name: php-experimental-gd
-
+          
       - name: Download a Build Artifact(php.ini)
         uses: actions/download-artifact@v2
         with:
           name: php.ini
-      - name: Download a Build Artifact(php-next-major.ini)
-        uses: actions/download-artifact@v2
-        with:
-          name: php-next-major.ini
-      - name: Download a Build Artifact(php-experimental-gd.ini)
-        uses: actions/download-artifact@v2
-        with:
-          name: php-experimental-gd.ini
-
 
       - name: file compressions
         run: |
           zip -9 zip-php php
           zip -9 zip-php-gd php-gd
-          zip -9 zip-php-gd-no-modification php-gd-no-modification
-          zip -9 zip-php-next-major-gd php-next-major-gd
-          zip -9 zip-php-experimental-gd php-experimental-gd
           
       - name: create checksums.sha256
         run: |
-          sha256sum "php" "php-gd" "php-gd-no-modification" "php-next-major-gd" "php-experimental-gd" "zip-php.zip" "zip-php-gd.zip" "zip-php-gd-no-modification.zip" "zip-php-next-major-gd.zip" "zip-php-experimental-gd.zip" "php.ini" "php-next-major.ini" "php-experimental-gd.ini" > checksums.sha256
+          sha256sum "php" "php-gd" "php.ini" > checksums.sha256
           cat checksums.sha256
           
       - uses: actions/upload-artifact@v1
@@ -172,17 +130,9 @@ jobs:
           files: |
             php
             php-gd
-            php-gd-no-modification
-            php-next-major-gd
-            php-experimental-gd
             zip-php.zip
             zip-php-gd.zip
-            zip-php-gd-no-modification.zip
-            zip-php-next-major-gd.zip
-            zip-php-experimental-gd.zip
             php.ini
-            php-next-major.ini
-            php-experimental-gd.ini
             checksums.sha256
           body: "The php version for this release is ${{ github.event.inputs.tagname }}.
 
@@ -196,10 +146,10 @@ This binary is for ARMv8 (aarch64, 64bit).
 
 It does not work on arm (32bit).
 
-All binaries are not compatible with pmmp3 and are for pmmp4.
+All binaries are not compatible with pmmp3/pmmp4 and are for pmmp5.
 
 the php or php-gd binaries are recommended.
 
-The php version of php-next-major-gd is 8.1..
-The php version of php-experimental-gd is 8.2..
+The php version of php is 8.2..
+The php version of php-gd is 8.2..
 "
